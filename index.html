@@ -718,7 +718,7 @@ var THEME_KEY = 'bp-theme', THEMES = { light: 'Clair', dark: 'Sombre', auto: 'Au
 try { var th0 = localStorage.getItem(THEME_KEY); if (THEMES[th0]) curTheme = th0; } catch (e) {}
 function applyTheme(t) { curTheme = THEMES[t] ? t : 'light'; var r = document.documentElement; if (curTheme === 'auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', curTheme); }
 applyTheme(curTheme);
-var store, cache = null, saveT = null, UI = { view: 'dashboard', bpStep: 0, sel: {}, showF: {}, sens: { vol: 0, price: 0, cost: 0, dso: 0 }, exp: { content: 'bp' }, cmpYear: 2 };
+var store, cache = null, saveT = null, UI = { view: 'dashboard', bpStep: 0, sel: {}, showF: {}, sens: { vol: 0, price: 0, cost: 0, dso: 0 }, exp: { content: 'bp', model: 'pro' }, cmpYear: 2 };
 
 function load() { try { var s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch (e) {} return null; }
 function init() { var p = SAMPLE.example(); return { projects: [p], current: p.id }; }
@@ -1300,7 +1300,7 @@ function docHtml(kind) {
 V.exports = function () {
   var p = proj();
   var h = '<h1>Exports</h1><p class="lead">Le PDF et l’Excel reprennent le scénario actif, ses hypothèses et la date de mise à jour.</p>';
-  h += '<div class="panel"><div class="row"><label class="fld"><span>Contenu</span><select data-b="U.exp.content" data-t="text">' + opts([['bp', 'Business plan complet avec prévisionnel'], ['prev', 'Prévisionnel financier seul']], UI.exp.content) + '</select></label><label class="fld"><span>Scénario exporté</span><select data-act-change="scen">' + p.scenarios.map(function (s) { return '<option value="' + s.id + '"' + (s.id === p.active ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join('') + '</select></label></div>' +
+  h += '<div class="panel"><div class="row"><label class="fld"><span>Contenu</span><select data-b="U.exp.content" data-t="text">' + opts([['bp', 'Business plan complet avec prévisionnel'], ['prev', 'Prévisionnel financier seul']], UI.exp.content) + '</select></label><label class="fld"><span>Modèle du PDF</span><select data-b="U.exp.model" data-t="text">' + opts([['pro', 'Complet : présentation investisseurs'], ['simple', 'Simple : rapport prévisionnel']], UI.exp.model || 'pro') + '</select></label><label class="fld"><span>Scénario exporté</span><select data-act-change="scen">' + p.scenarios.map(function (s) { return '<option value="' + s.id + '"' + (s.id === p.active ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join('') + '</select></label></div>' +
     '<div class="row" style="margin-top:14px"><button class="btn pri" data-act="pdf">Exporter en PDF</button><button class="btn pri" data-act="xlsx">Exporter en Excel (avec formules)</button><button class="btn" data-act="go" data-v="apercu">Aperçu à l’écran</button></div></div>';
   h += '<div class="panel"><h3 style="margin-top:0">Sauvegarde des projets</h3><p class="small muted">Les projets sont enregistrés automatiquement dans ce navigateur. Exportez une sauvegarde JSON pour les conserver ou les transférer.</p><div class="row"><button class="btn" data-act="jsonOut">Exporter la sauvegarde (JSON)</button><label class="btn">Importer une sauvegarde<input type="file" accept=".json" id="jsonIn" hidden></label></div></div>';
   return h;
@@ -1632,6 +1632,317 @@ function exportPdf() {
   }
   doc.setProperties({ title: T(title + ' - ' + company), subject: T('Scénario ' + sc), creator: 'Module Business Plan' });
   download(doc.output('blob'), fileBase() + (kind === 'bp' ? '-business-plan' : '-previsionnel') + '.pdf');
+}
+/* ---------- PDF version simple : rapport prévisionnel au format cabinet ---------- */
+function exportPdfSimple() {
+  if (!window.jspdf || !window.jspdf.jsPDF) return toast('Bibliothèque PDF non chargée : vérifiez la connexion Internet puis rechargez la page.');
+  var r = calc(), p = proj(), st = ST(), d = D(), kind = UI.exp.content, pl = r.pl;
+  var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  var mixc = function (c, t) { return c.map(function (v) { return Math.round(v + (255 - v) * t); }); };
+  var TQ = hexRgb(st.color), TD = TQ, TM = [47, 99, 168], TL = [168, 106, 18], G1 = mixc(TQ, 0.9), G2 = mixc(TQ, 0.78), G3 = mixc(TQ, 0.25), INK = [27, 34, 50], GREY = [76, 84, 102];
+  var company = st.company || p.name, ML = 18, MR = 18, TOP = 36, y = TOP, toc = [];
+  function T(s) { return san(s); }
+  function PW() { return doc.internal.pageSize.getWidth(); }
+  function PH() { return doc.internal.pageSize.getHeight(); }
+  function CW() { return PW() - ML - MR; }
+  function BOT() { return PH() - 20; }
+  function fill(c) { doc.setFillColor(c[0], c[1], c[2]); }
+  function ink(c) { doc.setTextColor(c[0], c[1], c[2]); }
+  function draw(c) { doc.setDrawColor(c[0], c[1], c[2]); }
+  function font(s, z) { doc.setFont('helvetica', s); doc.setFontSize(z); }
+  function newPage(o) { doc.addPage('a4', o || 'p'); y = TOP; }
+  function need(h) { if (y + h > BOT()) newPage(PW() > PH() ? 'l' : 'p'); }
+  function nice(x) { if (!(x > 0)) return 1; var e = Math.pow(10, Math.floor(Math.log(x) / Math.LN10)), f = x / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e; }
+  function fK(v) { var a = Math.abs(v); return a >= 1e6 ? fN(v / 1e6, 1) + ' M' : a >= 1e4 ? fN(v / 1e3, 1) + ' k' : fN(v, 0); }
+  function exLbl(i) { var s0 = r.sm + r.yStart[i], ys = r.sy + Math.floor(s0 / 12), ye = +r.exEnd[i].slice(-4); return ys === ye ? String(ye) : ys + '-' + ye; }
+  var YL = [0, 1, 2].map(exLbl), days = r.yLen.map(function (m) { return m * 30; });
+  var sum3 = function (a, b) { return a.map(function (v, i) { return v + b[i]; }); };
+
+  /* --- Titres et textes --- */
+  function section(t, np) { if (np) newPage('p'); else need(45); toc.push({ t: t, page: doc.getNumberOfPages() }); font('normal', 16); ink(GREY); doc.text(T(t).toUpperCase(), ML, y); y += 11; }
+  function sub(t) { need(52); font('bold', 10.5); ink([45, 45, 45]); doc.text(T(t), ML + 6, y); y += 7; }
+  function para(s, o) {
+    o = o || {}; var w = CW(), lh = 5;
+    String(s || '').split(/\n+/).forEach(function (pg) {
+      if (!pg.trim()) return; font(o.b ? 'bold' : (o.it ? 'italic' : 'normal'), 10); ink(INK);
+      var ls = doc.splitTextToSize(T(pg), w);
+      ls.forEach(function (l, i) { need(lh + 1); doc.text(l, ML, y, i < ls.length - 1 ? { align: 'justify', maxWidth: w } : {}); y += lh; });
+      y += 2.5;
+    });
+    y += 1.5;
+  }
+
+  /* --- Tableaux (en-tête turquoise, totaux grisés) --- */
+  var STY = { big: { fillColor: G1, fontSize: 10 }, dark: { fillColor: G3, textColor: 255, fontStyle: 'italic' }, grey: { fillColor: G2 }, sub: { fontStyle: 'italic', textColor: [95, 95, 95] }, n: {} };
+  function n0(v, s) { if (v == null || !isFinite(v)) return 'n.c.'; return Math.abs(v) < 0.5 ? ((s === 'big' || s === 'grey' || s === 'dark') ? '0' : '') : fN(v, 0); }
+  function pc(v, b) { return b ? fN(v / b * 100, 0) + ' %' : ''; }
+  function mk(l, vals, s, base) {
+    s = s || 'n'; var c = [(s === 'sub' ? '   ' : '') + l];
+    vals.forEach(function (v, i) { c.push(typeof v === 'string' ? v : n0(v, s)); if (base) c.push(typeof v === 'string' ? '' : pc(v, base[i])); });
+    return c.map(function (x) { return { content: x, styles: STY[s] }; });
+  }
+  function tbl(head, body, o) {
+    o = o || {}; var est = (body.length + 1) * 5.2 + 8; need(est < (BOT() - TOP) * 0.75 ? est : 30);
+    doc.autoTable({
+      head: [head.map(T)], body: body.map(function (rw) { return rw.map(function (c) { return typeof c === 'object' ? Object.assign({}, c, { content: T(c.content) }) : T(c); }); }),
+      startY: y, margin: { left: ML, right: MR, top: TOP, bottom: 22 }, theme: 'plain', showHead: 'everyPage', rowPageBreak: 'avoid',
+      styles: { font: 'helvetica', fontSize: o.fs || 8.6, cellPadding: { top: 1.05, bottom: 1.05, left: 1.6, right: 1.6 }, halign: 'right', valign: 'middle', textColor: INK },
+      headStyles: { fillColor: TQ, textColor: 255, fontStyle: 'normal', fontSize: o.hfs || 10.5, cellPadding: { top: 2.3, bottom: 2.3, left: 1.6, right: 1.6 } },
+      columnStyles: { 0: { halign: 'left', cellWidth: o.w0 || 'auto' } },
+      didParseCell: function (dd) { if (dd.column.index === 0) dd.cell.styles.halign = dd.section === 'head' ? 'center' : 'left'; }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+  var H3 = function (t) { return [t].concat(YL); }, HP = function (t) { return [t, YL[0], '%', YL[1], '%', YL[2], '%']; };
+
+  /* --- Graphiques --- */
+  function axes(x0, y0, w, h, vals, nb) {
+    var mx = Math.max.apply(null, vals.concat([0])), mn = Math.min.apply(null, vals.concat([0])), step = nice((mx - mn) / (nb || 5) || 1);
+    var top = Math.ceil(mx / step) * step, bot = Math.floor(mn / step) * step; if (top === bot) top = bot + step;
+    var Y = function (v) { return y0 + h - (v - bot) / (top - bot) * h; }, k = 0;
+    for (var g = bot; g < top - step / 1e6; g += step, k++) if (k % 2 === 1) { fill([244, 245, 247]); doc.rect(x0, Y(g + step), w, Y(g) - Y(g + step), 'F'); }
+    font('normal', 7.8); ink(GREY);
+    for (g = bot; g <= top + step / 1e6; g += step) { draw([200, 200, 200]); doc.setLineWidth(0.2); doc.line(x0 - 1.2, Y(g), x0, Y(g)); doc.text(T(fK(g)), x0 - 2.2, Y(g) + 1, { align: 'right' }); }
+    draw([165, 165, 165]); doc.setLineWidth(0.4); doc.line(x0, y0 - 4, x0, y0 + h); doc.line(x0, Y(0), x0 + w + 4, Y(0));
+    fill([165, 165, 165]); doc.triangle(x0 - 1.2, y0 - 2.5, x0 + 1.2, y0 - 2.5, x0, y0 - 5, 'F'); doc.triangle(x0 + w + 2.5, Y(0) - 1.2, x0 + w + 2.5, Y(0) + 1.2, x0 + w + 5, Y(0), 'F');
+    return Y;
+  }
+  function chartHead(title, series) {
+    font('normal', 13); ink(TD); doc.text(T(title), PW() / 2, y, { align: 'center' }); y += 8;
+    font('normal', 8.8); var lw = series.reduce(function (a, s) { return a + doc.getTextWidth(T(s.n)) + 11; }, 0), lx = (PW() - lw) / 2;
+    series.forEach(function (s) { fill(s.c); doc.rect(lx, y - 2.7, 3.2, 3.2, 'F'); ink(TD); doc.text(T(s.n), lx + 4.7, y); lx += doc.getTextWidth(T(s.n)) + 11; });
+    y += 9;
+  }
+  function bars(caption, title, labels, series, h) {
+    h = h || 68; need(h + 42);
+    if (caption) { font('bold', 10.5); ink([45, 45, 45]); doc.text(T(caption), PW() / 2, y, { align: 'center' }); y += 9; }
+    chartHead(title, series);
+    var all = []; series.forEach(function (s) { all = all.concat(s.v); });
+    var x0 = ML + 18, w = CW() - 26, y0 = y, Y = axes(x0, y0, w, h, all), gw = w / labels.length, bw = Math.min(22, gw * 0.8 / series.length);
+    labels.forEach(function (lb, i) {
+      var cx = x0 + gw * i + gw / 2, x1 = cx - bw * series.length / 2;
+      series.forEach(function (s, j) {
+        var v = s.v[i] || 0, a = Y(Math.max(v, 0)), b = Y(Math.min(v, 0)), bx = x1 + j * bw;
+        fill(s.c); doc.rect(bx, a, bw - 0.6, Math.max(b - a, 0.3), 'F');
+        draw(s.c); doc.setLineWidth(0.25); doc.line(bx, a - 0.8, bx + bw - 0.6, a - 0.8);
+        font('normal', 7.4); ink(TD); doc.text(T(fK(v)), bx + (bw - 0.6) / 2, (v < 0 ? b + 3.4 : a - 1.8), { align: 'center' });
+      });
+      font('normal', 9.5); ink(GREY); doc.text(T(lb), cx, y0 + h + 6, { align: 'center' });
+    });
+    y = y0 + h + 16;
+  }
+
+  /* ===== Couverture ===== */
+  var pw = PW(), ph = PH(), sd = new Date(st.startDate);
+  var per = ('0' + (sd.getMonth() + 1)).slice(-2) + '/' + sd.getFullYear() + ' À ' + r.exEnd[2].slice(3);
+  fill(TQ); doc.rect(10, 10, pw - 20, ph - 20, 'F');
+  draw(mixc(TQ, 0.18)); doc.setLineWidth(1.1);
+  doc.lines([[25, -30, 70, -25, 120, -75]], 10, 285, [1, 1], 'S'); doc.lines([[30, -25, 80, -10, 140, -60]], 10, 270, [1, 1], 'S');
+  doc.lines([[8, 40, 20, 80, 14, 140]], 115, 10, [1, 1], 'S');
+  fill([255, 255, 255]); doc.rect(10, 58, 132, 40, 'F');
+  font('normal', 26); ink(TQ); doc.text('DOSSIER PRÉVISIONNEL', 18, 78);
+  font('normal', 10.5); doc.text(T('SUR 3 EXERCICES DE ' + per), 18, 88);
+  draw([255, 255, 255]); doc.setLineWidth(0.8); doc.line(18, 110, 27, 110);
+  font('bold', 20); ink([255, 255, 255]); var cl = doc.splitTextToSize(T(company), 170); doc.text(cl, 18, 120);
+  var cy = 120 + (cl.length - 1) * 8 + 6; doc.line(18, cy, 27, cy);
+  font('normal', 10.5); [kind === 'bp' ? 'Business plan et prévisionnel financier' : 'Prévisionnel financier', 'Scénario ' + scen().name, 'Exercices ' + YL.join(', '), 'Montants en ' + st.currency + ' hors taxes'].forEach(function (t, i) { doc.text(T(t), 18, cy + 9 + i * 5.6); });
+  if (st.logo) { try { var ip = doc.getImageProperties(st.logo), rt = Math.min(36 / ip.width, 22 / ip.height); fill([255, 255, 255]); doc.rect(pw - 62, 220, 42, 28, 'F'); doc.addImage(st.logo, pw - 59 + (36 - ip.width * rt) / 2, 223 + (22 - ip.height * rt) / 2, ip.width * rt, ip.height * rt, undefined, 'FAST'); } catch (e) {} }
+  draw([255, 255, 255]); doc.setLineWidth(0.2); doc.line(pw - 80, 256, pw - 18, 256);
+  font('bold', 9.5); ink([255, 255, 255]); doc.text(T('Mis à jour le ' + new Date(p.updatedAt).toLocaleDateString('fr-FR')), pw - 18, 262, { align: 'right' });
+
+  /* ===== Sommaire (rempli à la fin) ===== */
+  newPage('p'); var tocPage = doc.getNumberOfPages();
+
+  /* ===== Présentation du projet ===== */
+  var secs = p.bp.sections.filter(function (s) { return s.visible && s.key !== 'previsions' && s.key !== 'financement'; });
+  var filled = function (s) { return s.fields.filter(function (f) { return f.kind !== 'auto' && (f.value || '').trim(); }); };
+  if (kind === 'bp' && secs.some(function (s) { return filled(s).length; })) {
+    section('Présentation du projet', true);
+    secs.forEach(function (s) { var fl = filled(s); if (!fl.length) return; sub(s.title); fl.forEach(function (f) { need(14); para(f.label, { b: true }); y -= 2.5; para(f.value); }); });
+  }
+
+  /* ===== Description du projet ===== */
+  section('Description du projet', true);
+  sub('Chiffre d’affaires'); para(GEN.ca(r));
+  sub('Rentabilité'); para(GEN.rentab(r));
+  sub('Investissements et financement'); para(GEN.fin(r).replace(/ ?La capacité d’autofinancement cumulée[^.]*\./, ''));
+  sub('Trésorerie'); para(GEN.treso(r));
+  var fv = function (key, lbl) { var s = p.bp.sections.filter(function (x) { return x.key === key; })[0]; var f = s && s.fields.filter(function (x) { return x.label === lbl && (x.value || '').trim(); })[0]; return f ? f.value : ''; };
+  if (kind === 'bp' && fv('previsions', 'Commentaires sur les hypothèses')) { sub('Commentaires sur les hypothèses'); para(fv('previsions', 'Commentaires sur les hypothèses')); }
+  if (kind === 'bp' && fv('financement', 'Demande adressée aux financeurs')) { sub('Demande adressée aux financeurs'); para(fv('financement', 'Demande adressée aux financeurs')); }
+
+  /* ===== Investissements et financements ===== */
+  section('Investissements et financements', true);
+  sub('Les investissements prévus sur la période :');
+  var NAT = [['incorporel', 'Immobilisations incorporelles'], ['corporel', 'Immobilisations corporelles'], ['financier', 'Immobilisations financières']], inv = [], invT = [0, 0, 0];
+  NAT.forEach(function (n) {
+    var as = r.assets.filter(function (a) { return a.type === n[0] && a.inY >= 0 && a.inY <= 2; }); if (!as.length) return;
+    var t = [0, 0, 0]; as.forEach(function (a) { t[a.inY] += a.amount; }); invT = sum3(invT, t);
+    inv.push(mk(n[1], t)); as.forEach(function (a) { var v = [0, 0, 0]; v[a.inY] = a.amount; inv.push(mk(a.label, v, 'sub')); });
+  });
+  var cum = [invT[0], invT[0] + invT[1], invT[0] + invT[1] + invT[2]];
+  inv.push(mk('Total des investissements à réaliser', invT, 'grey'), mk('Immobilisations existantes', [0, cum[0], cum[1]]), mk('Total des immobilisations', cum, 'big'));
+  tbl(H3('Investissements'), inv);
+  sub('Le financement des investissements :');
+  var yo = function (m) { return r.yOf(Math.max(0, Math.min(r.M - 1, Math.round(+m || 0)))); }, fin = [], finT = [0, 0, 0];
+  function grp(lbl, items) { if (!items.length) return; var t = [0, 0, 0]; items.forEach(function (it) { t[it.y] += it.v; }); finT = sum3(finT, t); fin.push(mk(lbl, t)); items.forEach(function (it) { var v = [0, 0, 0]; v[it.y] = it.v; fin.push(mk(it.l, v, 'sub')); }); }
+  grp('Apports en capital', d.contributions.filter(function (c) { return c.type !== 'cca'; }).map(function (c) { return { l: c.label, v: +c.amount || 0, y: yo(c.m) }; }));
+  grp('Apports en comptes courants', d.contributions.filter(function (c) { return c.type === 'cca'; }).map(function (c) { return { l: c.label, v: +c.amount || 0, y: yo(c.m) }; }));
+  grp('Emprunts', r.loans.filter(function (L) { return L.m0 < r.M; }).map(function (L) { return { l: L.label, v: L.amount, y: r.yOf(L.m0) }; }));
+  grp('Subventions', d.subsidies.map(function (s) { return { l: s.label, v: +s.amount || 0, y: yo(s.m) }; }));
+  fin.push(mk('Total des financements', finT, 'big'), mk('Écart de financement', finT.map(function (v, i) { return v - invT[i]; }), 'grey'));
+  tbl(H3('Financements des investissements'), fin);
+  if (r.loans.length) {
+    sub('Le détail des remboursements d’emprunts :');
+    var lr = [], cap = [0, 0, 0], it = [0, 0, 0], crd = [0, 0, 0];
+    r.loans.forEach(function (L) { cap = sum3(cap, L.princY); it = sum3(it, L.intY); crd = sum3(crd, L.crdY); });
+    lr.push(mk('Capital remboursé', cap)); r.loans.forEach(function (L) { lr.push(mk(L.label, L.princY, 'sub')); });
+    lr.push(mk('Charges d’intérêts', it)); r.loans.forEach(function (L) { lr.push(mk(L.label, L.intY, 'sub')); });
+    lr.push(mk('Échéances d’emprunts', sum3(cap, it), 'big')); r.loans.forEach(function (L) { lr.push(mk(L.label, sum3(L.princY, L.intY), 'sub')); });
+    lr.push(mk('Capital restant dû', crd)); r.loans.forEach(function (L) { lr.push(mk(L.label, L.crdY, 'sub')); });
+    tbl(H3('Remboursements des emprunts'), lr);
+  }
+
+  /* ===== Chiffre d'affaires ===== */
+  section('Chiffre d’affaires prévisionnel', true);
+  sub('Le chiffre d’affaires prévu :');
+  var gr = function (a, b) { return a ? fP((b / a - 1) * 100, 1) : ''; };
+  var caRows = r.acts.map(function (a) { return [a.name, n0(a.caY[0]), n0(a.caY[1]), gr(a.caY[0], a.caY[1]), n0(a.caY[2]), gr(a.caY[1], a.caY[2]), fP(a.vat, 1)]; });
+  caRows.push(['Total', n0(pl.ca[0], 'big'), n0(pl.ca[1], 'big'), gr(pl.ca[0], pl.ca[1]), n0(pl.ca[2], 'big'), gr(pl.ca[1], pl.ca[2]), ''].map(function (x) { return { content: x, styles: STY.big }; }));
+  tbl(['Chiffre d’affaires', YL[0], YL[1], 'Var.', YL[2], 'Var.', 'TVA'], caRows, { hfs: 9.5 });
+  bars('Évolution du chiffre d’affaires', 'Chiffre d’affaires global', YL, [{ n: 'Chiffre d’affaires', c: TD, v: pl.ca }], 62);
+  bars('Évolution de la marge', 'Marge globale', YL, [{ n: 'Chiffre d’affaires', c: TD, v: pl.ca }, { n: 'Marge globale', c: TM, v: pl.mb }], 62);
+
+  /* ===== Salaires et charges sociales ===== */
+  section('Salaires et charges sociales', false);
+  var cntM = function (st0, k) { var c = 0; for (var m = r.yStart[k]; m <= r.yEnd[k]; m++) if (m >= st0) c++; return c; };
+  var staff = d.staff.map(function (s) { var h = r.lines[s.headcount.id], w = r.lines[s.salary.id], s0 = Math.max(0, Math.round(+s.start || 0)); return { l: s.label, v: [0, 1, 2].map(function (k) { return h && w ? h.v[k] * w.v[k] / 12 * cntM(s0, k) : 0; }) }; });
+  if (d.director.enabled && r.lines[d.director.line.id]) { var dl = r.lines[d.director.line.id], d0 = Math.max(0, Math.round(+d.director.start || 0)); staff.push({ l: 'Rémunération du dirigeant', v: [0, 1, 2].map(function (k) { return dl.v[k] / 12 * cntM(d0, k); }) }); }
+  sub('Les rémunérations annuelles :');
+  tbl(H3('Salaires bruts'), staff.map(function (s) { return mk(s.l, s.v); }).concat([mk('Total des salaires', pl.sal, 'big')]));
+  sub('Les charges sociales :');
+  tbl(H3('Charges sociales'), [mk('Charges sociales patronales et du dirigeant', pl.soc), mk('Total des charges de personnel', sum3(pl.sal, pl.soc), 'big')]);
+
+  /* ===== Frais généraux ===== */
+  section('Frais généraux prévisionnels', true);
+  sub('Les charges externes prévues :');
+  var ce = [], vEx = r.vcs.filter(function (c) { return c.nature === 'externes'; }), fEx = r.fcs.filter(function (c) { return c.cat === 'externes'; });
+  if (vEx.length) { ce.push(mk('Charges externes variables', pl.extVar)); vEx.forEach(function (c) { ce.push(mk(c.label, c.costY, 'sub')); }); }
+  if (fEx.length) { ce.push(mk('Charges externes fixes', pl.extFix)); fEx.forEach(function (c) { ce.push(mk(c.label, c.costY, 'sub')); }); }
+  ce.push(mk('Total', sum3(pl.extVar, pl.extFix), 'big'));
+  tbl(H3('Charges externes'), ce);
+  var fIm = r.fcs.filter(function (c) { return c.cat === 'impots'; }), fAu = r.fcs.filter(function (c) { return c.cat === 'autres'; });
+  sub('Les impôts et taxes de la période :');
+  tbl(H3('Impôts et taxes'), fIm.map(function (c) { return mk(c.label, c.costY); }).concat([mk('Total', pl.impots, 'big')]));
+  if (fAu.length) { sub('Les autres charges de gestion :'); tbl(H3('Autres charges'), fAu.map(function (c) { return mk(c.label, c.costY); }).concat([mk('Total', pl.autres, 'big')])); }
+  sub('Le détail des amortissements :');
+  tbl(H3('Amortissements'), r.assets.filter(function (a) { return a.dotY.some(function (v) { return Math.abs(v) > 0.5; }); }).map(function (a) { return mk(a.label, a.dotY); }).concat([mk('Total', pl.dot, 'big')]));
+
+  /* ===== Compte de résultat ===== */
+  section('Compte de résultat prévisionnel', true);
+  sub('Évolution du compte de résultat :');
+  var B = pl.ca, ext = sum3(pl.extVar, pl.extFix), pers = sum3(pl.sal, pl.soc);
+  var prodE = sum3(pl.ca, pl.subExpl), chE = [0, 1, 2].map(function (k) { return pl.conso[k] + ext[k] + pl.impots[k] + pers[k] + pl.dot[k] + pl.autres[k]; });
+  var cr = r.acts.map(function (a) { return mk(a.name, a.caY, 'sub', B); });
+  cr.push(mk('Chiffre d’affaires', pl.ca, 'dark', B));
+  if (pl.subExpl.some(function (v) { return v; })) cr.push(mk('Subventions d’exploitation', pl.subExpl, 'n', B));
+  cr.push(mk('Total des produits d’exploitation', prodE, 'grey', B), mk('Achats consommés', pl.conso, 'n', B), mk('Charges externes', ext, 'dark', B), mk('Impôts et taxes', pl.impots, 'n', B),
+    mk('Salaires et rémunérations', pl.sal, 'n', B), mk('Charges sociales', pl.soc, 'n', B), mk('Charges de personnel', pers, 'dark', B), mk('Dotations aux amortissements', pl.dot, 'n', B));
+  if (pl.autres.some(function (v) { return v; })) cr.push(mk('Autres charges de gestion', pl.autres, 'n', B));
+  cr.push(mk('Total des charges d’exploitation', chE, 'grey', B), mk('Résultat d’exploitation', pl.rex, 'big', B), mk('Charges financières', pl.intr, 'n', B), mk('Résultat financier', pl.intr.map(function (v) { return -v; }), 'grey', B),
+    mk('Résultat courant', pl.rcai, 'big', B), mk('Résultat exceptionnel', pl.rexc, 'n', B), mk('Impôt sur les bénéfices', pl.is, 'n', B), mk('Résultat de l’exercice', pl.rn, 'big', B));
+  tbl(HP('Compte de résultat'), cr, { hfs: 9.5 });
+  bars('Analyse de l’activité sur la période', 'Analyse de l’activité', YL, [{ n: 'CA', c: TD, v: pl.ca }, { n: 'Marge', c: TM, v: pl.mb }, { n: 'Résultat', c: TL, v: pl.rn }], 64);
+
+  /* ===== Soldes intermédiaires de gestion ===== */
+  section('Soldes intermédiaires de gestion', true);
+  sub('L’évolution des soldes intermédiaires de gestion :');
+  var dotAu = sum3(pl.dot, pl.autres);
+  tbl(HP('Soldes intermédiaires de gestion'), [mk('Chiffre d’affaires', pl.ca, 'grey', B), mk('Achats consommés', pl.conso, 'n', B), mk('Marge globale', pl.mb, 'big', B), mk('Charges externes', ext, 'n', B), mk('Valeur ajoutée', pl.va, 'big', B),
+    mk('Subventions d’exploitation', pl.subExpl, 'n', B), mk('Impôts et taxes', pl.impots, 'n', B), mk('Charges de personnel', pers, 'n', B), mk('Excédent brut d’exploitation', pl.ebe, 'big', B), mk('Dotations et autres charges', dotAu, 'n', B),
+    mk('Résultat d’exploitation', pl.rex, 'big', B), mk('Charges financières', pl.intr, 'n', B), mk('Résultat courant', pl.rcai, 'big', B), mk('Résultat exceptionnel', pl.rexc, 'n', B), mk('Impôt sur les bénéfices', pl.is, 'n', B),
+    mk('Résultat de l’exercice', pl.rn, 'big', B)], { hfs: 9.5 });
+  /* ===== Seuil de rentabilité ===== */
+  section('Seuil de rentabilité', true);
+  sub('Le seuil de rentabilité économique :');
+  var cv = sum3(pl.conso, pl.extVar), I = r.ind;
+  tbl(H3('Seuil de rentabilité économique'), [mk('Chiffre d’affaires', pl.ca, 'big'), mk('Achats consommés', pl.conso), mk('Charges externes variables', pl.extVar), mk('Total des coûts variables', cv, 'dark'), mk('Marge sur coût variable', I.map(function (x) { return x.mcv; })),
+    mk('Taux de marge sur coût variable', I.map(function (x) { return x.tmcv == null ? 'n.c.' : fP(x.tmcv * 100, 2); }), 'big'), mk('Coûts fixes', I.map(function (x) { return x.cf; }), 'dark'), mk('Résultat courant avant impôt', pl.rcai, 'grey'),
+    mk('Seuil de rentabilité', I.map(function (x) { return x.sr == null ? 'n.c.' : fN(x.sr, 0); }), 'big'), mk('Excédent / insuffisance', I.map(function (x) { return x.sr == null ? 'n.c.' : fN(x.ca - x.sr, 0); })),
+    mk('Point mort (jours)', I.map(function (x, k) { return x.sr == null || !x.ca ? 'n.c.' : fN(x.sr / x.ca * days[k], 0) + ' jours'; })), mk('Point mort atteint en', I.map(function (x) { return x.pm != null ? r.monthLabel(x.pm) : 'non atteint'; }))]);
+  bars('Évolution du seuil de rentabilité', 'Seuil de rentabilité', YL, [{ n: 'Chiffre d’affaires', c: TD, v: pl.ca }, { n: 'Seuil économique', c: TM, v: I.map(function (x) { return x.sr || 0; }) }], 62);
+
+  /* ===== BFR ===== */
+  section('Besoin en fonds de roulement', true);
+  sub('Évolution du besoin en fonds de roulement :');
+  var bs = r.bs, bv = function (k) { return bs.map(function (b) { return b[k]; }); };
+  var bes = bs.map(function (b) { return b.stocks + b.clients + b.tvaA; }), res = bs.map(function (b) { return b.fournisseurs + b.sociales + b.fiscales; });
+  tbl(H3('Besoin en fonds de roulement'), [mk('Stocks de marchandises', bv('stocks')), mk('Créances clients', bv('clients')), mk('Crédit de TVA', bv('tvaA')), mk('Besoins d’exploitation (total)', bes, 'grey'),
+    mk('Dettes fournisseurs', bv('fournisseurs')), mk('Dettes sociales', bv('sociales')), mk('Dettes fiscales', bv('fiscales')), mk('Ressources d’exploitation (total)', res, 'grey'),
+    mk('Variation du B.F.R.', r.pf.map(function (x) { return x.dbfr; })), mk('Besoin en fonds de roulement', bv('bfr'), 'big')]);
+
+  /* ===== Plan de financement et trésorerie ===== */
+  section('Plan de financement', true);
+  sub('Le plan de financement sur la période :');
+  var pfv = function (k) { return r.pf.map(function (x) { return x[k]; }); };
+  tbl(H3('Plan de financement'), [mk('Investissements', pfv('invest')), mk('Variation du B.F.R.', pfv('dbfr')), mk('Remboursements d’emprunts', pfv('remb')), mk('Total des besoins', pfv('besoins'), 'big'),
+    mk('Apports en capital', pfv('capital')), mk('Apports en comptes courants', pfv('cca')), mk('Souscription d’emprunts', pfv('emprunts')), mk('Subventions d’investissement', pfv('subInv')), mk('Capacité d’autofinancement', pfv('caf')),
+    mk('Total des ressources', pfv('ressources'), 'big'), mk('Variation de trésorerie', pfv('var')), mk('Solde de trésorerie', pfv('tEnd'), 'big')]);
+  section('État de trésorerie', false);
+  sub('L’évolution du solde de trésorerie :');
+  var fr = bs.map(function (b) { return b.cp + b.emprunts + b.cca - b.immoN; });
+  tbl(H3('État de trésorerie'), [mk('Fonds de roulement', fr), mk('Besoin en fonds de roulement', bv('bfr')), mk('Solde de trésorerie', bs.map(function (b) { return b.treso - b.concours; }), 'big')]);
+
+  /* ===== Bilan et ratios de structure ===== */
+  section('Bilan prévisionnel', true);
+  sub('Le bilan prévisionnel de la période :');
+  var ac = bs.map(function (b) { return b.stocks + b.clients + b.tvaA + b.treso; }), dt = bs.map(function (b) { return b.dettes; });
+  tbl(['Bilan'].concat(r.exEnd), [mk('Immobilisations brutes', bv('immoB')), mk('Amortissements', bv('amort')), mk('Immobilisations nettes', bv('immoN'), 'grey'), mk('Stocks', bv('stocks')), mk('Créances clients', bv('clients')), mk('Crédit de TVA', bv('tvaA')),
+    mk('Disponibilités', bv('treso')), mk('Actif circulant', ac, 'grey'), mk('Total de l’actif', bv('actif'), 'big'), mk('Capital social', bv('capital')), mk('Report à nouveau', bv('report')), mk('Résultat de l’exercice', bv('rn')),
+    mk('Subventions d’investissement', bv('subv')), mk('Capitaux propres', bv('cp'), 'grey'), mk('Emprunts et dettes assimilées', bv('emprunts')), mk('Comptes courants d’associés', bv('cca')), mk('Dettes fournisseurs', bv('fournisseurs')),
+    mk('Dettes fiscales et sociales', bs.map(function (b) { return b.fiscales + b.sociales; })), mk('Concours bancaires', bv('concours')), mk('Total des dettes', dt, 'grey'), mk('Total du passif', bv('passif'), 'big')]);
+  section('Ratios de structure', false);
+  var jr = function (num, den) { return num.map(function (v, k) { return den[k] > 0 ? fN(v / den[k] * days[k], 0) + ' jours' : 'n.c.'; }); };
+  var rp = function (num, den) { return num.map(function (v, k) { return den[k] > 0 ? fP(v / den[k] * 100, 1) : 'n.s.'; }); };
+  tbl(H3('Ratios de structure'), [mk('Délai de rotation des stocks', jr(bv('stocks'), pl.conso)), mk('Délai clients (jours de CA)', jr(bv('clients'), pl.ca)), mk('Délai des dettes fournisseurs', jr(bv('fournisseurs'), [0, 1, 2].map(function (k) { return pl.conso[k] + ext[k]; }))),
+    mk('BFR en nombre de jours de CA', I.map(function (x) { return x.bfrJ == null ? 'n.c.' : fN(x.bfrJ, 0) + ' jours'; })), mk('Autonomie financière', rp(bv('cp'), bv('passif'))), mk('Taux d’endettement', rp(bv('emprunts'), bv('cp'))),
+    mk('Solvabilité générale (actif / dettes)', bs.map(function (b) { return b.dettes > 0 ? fN(b.actif / b.dettes, 2) : 'n.s.'; })), mk('Capacité de remboursement des emprunts', bs.map(function (b, k) { return b.emprunts <= 0.5 ? 'sans objet' : pl.caf[k] > 0 ? fN(Math.ceil(b.emprunts / pl.caf[k]), 0) + ' an(s)' : 'n.s.'; }))]);
+
+  /* ===== Annexes ===== */
+  newPage('p'); toc.push({ t: 'Annexes', page: doc.getNumberOfPages() }); var annexPage = doc.getNumberOfPages();
+  fill([244, 245, 247]); doc.rect(10, 10, pw - 20, ph - 20, 'F'); fill(TQ); doc.rect(62, 175, pw - 72, 30, 'F'); font('normal', 22); ink([255, 255, 255]); doc.text('ANNEXES', 70, 194);
+  newPage('l'); toc.push({ t: 'Solde de trésorerie mensuel', page: doc.getNumberOfPages(), lvl: 2 });
+  var tv = []; for (var m = 0; m < r.M; m++) tv.push(r.cash.T[m] || 0);
+  y = 44; font('normal', 15); ink(TD); doc.text('Solde de trésorerie', PW() / 2, y, { align: 'center' }); y += 10;
+  var x0 = ML + 20, w = PW() - ML - MR - 30, h = 105, y0 = y, Y = axes(x0, y0, w, h, tv, 7), X = function (i) { return x0 + 4 + i * (w - 8) / Math.max(1, tv.length - 1); };
+  draw(TD); doc.setLineWidth(0.7); for (var i = 1; i < tv.length; i++) doc.line(X(i - 1), Y(tv[i - 1]), X(i), Y(tv[i]));
+  tv.forEach(function (v, i) { fill(TL); draw(TD); doc.setLineWidth(0.3); doc.circle(X(i), Y(v), 0.9, 'FD'); });
+  font('normal', 8.5); ink(GREY);
+  for (i = 0; i < tv.length; i += 3) { doc.text(T(r.monthLabel(i)), X(i), y0 + h + 6, { align: 'center' }); }
+  [0, 1, 2].forEach(function (k) { font('bold', 8.5); doc.text(T('Exercice ' + YL[k]), X(r.yStart[k]), y0 + h + 11, { align: 'left' }); });
+  font('bold', 10); ink(INK); doc.text(T('Évolution du solde de trésorerie sur la période ' + per.replace(' À ', ' à ')), PW() / 2, y0 + h + 20, { align: 'center' });
+
+  /* ===== Sommaire ===== */
+  doc.setPage(tocPage); y = TOP + 6;
+  toc.forEach(function (e) {
+    var x = e.lvl === 2 ? ML + 8 : ML, pg = String(e.page), xr = PW() - MR;
+    font('normal', e.lvl === 2 ? 11 : 12.5); ink(e.lvl === 2 ? TQ : GREY);
+    var t = T(e.t).toUpperCase(); doc.text(t, x, y); var tw = doc.getTextWidth(t);
+    ink(TQ); doc.text(pg, xr, y, { align: 'right' });
+    draw(GREY); doc.setLineWidth(0.2); doc.line(x + tw + 1, y + 0.4, xr - doc.getTextWidth(pg) - 1.5, y + 0.4);
+    doc.link(ML, y - 5, CW(), 7, { pageNumber: e.page });
+    y += 8.4;
+  });
+
+  /* ===== Bandeau et pagination ===== */
+  var n = doc.getNumberOfPages();
+  for (var pgi = 2; pgi <= n; pgi++) {
+    doc.setPage(pgi); var W2 = PW(), H2 = PH();
+    if (pgi !== annexPage) { fill(TQ); doc.rect(12, 10, W2 - 12, 15, 'F'); font('normal', 8.5); ink([255, 255, 255]); doc.text(T(company), 18, 19.5); }
+    font('normal', 9); ink(INK); doc.text('Page ' + pgi + '/' + n, W2 - MR, H2 - 10, { align: 'right' });
+  }
+  doc.setProperties({ title: T('Dossier prévisionnel - ' + company), subject: T('Scénario ' + scen().name), creator: 'Module Business Plan' });
+  download(doc.output('blob'), fileBase() + '-rapport-previsionnel.pdf');
 }
 function fileBase() { return (ST().company || proj().name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() + '-' + scen().name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-') + '-' + today(); }
 
@@ -2040,7 +2351,7 @@ var ACT = {
   navTog: function (a) { var k = a.getAttribute('data-v'); NAVC[k] = a.getAttribute('aria-expanded') === 'true'; try { localStorage.setItem('bp-nav', JSON.stringify(NAVC)); } catch (e) {} render(); },
   chartType: function (a) { UI['chart' + a.getAttribute('data-k')] = a.getAttribute('data-v'); render(); },
   pieYear: function (a) { UI.pieYear = +a.getAttribute('data-v'); render(); },
-  pdf: function () { exportPdf(); },
+  pdf: function () { if (UI.exp.model === 'simple') exportPdfSimple(); else exportPdf(); },
   xlsx: function () { exportXlsx(); },
   jsonOut: function () { download(new Blob([JSON.stringify(store, null, 1)], { type: 'application/json' }), 'business-plans-sauvegarde-' + today() + '.json'); }
 };
