@@ -692,6 +692,11 @@ if (typeof module !== 'undefined') module.exports = SAMPLE;
 
 /* ===== Noyau de l'interface ===== */
 var KEY = 'bp-module-v1';
+/* ----- Thème d'affichage : clair (par défaut), sombre ou automatique ----- */
+var THEME_KEY = 'bp-theme', THEMES = { light: 'Clair', dark: 'Sombre', auto: 'Auto' }, curTheme = 'light';
+try { var th0 = localStorage.getItem(THEME_KEY); if (THEMES[th0]) curTheme = th0; } catch (e) {}
+function applyTheme(t) { curTheme = THEMES[t] ? t : 'light'; var r = document.documentElement; if (curTheme === 'auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', curTheme); }
+applyTheme(curTheme);
 var store, cache = null, saveT = null, UI = { view: 'dashboard', bpStep: 0, sel: {}, showF: {}, sens: { vol: 0, price: 0, cost: 0, dso: 0 }, exp: { content: 'bp' }, cmpYear: 2 };
 
 function load() { try { var s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch (e) {} return null; }
@@ -1816,6 +1821,9 @@ var ICO = {
   eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   download: '<path d="M12 4v11M7 10l5 5 5-5M4 20h16"/>',
   brush: '<path d="M14 4l6 6-8 8H6v-6z"/><path d="M4 20h4"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  auto: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
   dots: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>'
 };
 function ico(k) { return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + (ICO[k] || '') + '</svg>'; }
@@ -1839,6 +1847,7 @@ function shell() {
   var top = '<div class="crumb">' + (vi[0] ? vi[0] + ' / ' : '') + '<b>' + vi[1] + '</b></div><span class="grow"></span>' +
     '<span class="small muted">Scénario</span><div class="seg" role="group" aria-label="Scénario actif">' + p.scenarios.map(function (s) { return '<button data-act="scen" data-v="' + s.id + '" class="' + (s.id === p.active ? 'on' : '') + '">' + esc(s.name) + '</button>'; }).join('') + '</div>' +
     '<select class="mobnav" data-act-change="go" aria-label="Navigation"><option value="dashboard"' + (UI.view === 'dashboard' ? ' selected' : '') + '>Tableau de bord</option>' + NAV.map(function (g) { return '<optgroup label="' + g[0] + '">' + g[1].map(function (v) { return '<option value="' + v[0] + '"' + (UI.view === v[0] ? ' selected' : '') + '>' + v[1] + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>' +
+    '<button class="btn ghost" data-act="theme" title="Changer le thème (clair, sombre, automatique)" aria-label="Thème : ' + THEMES[curTheme] + '">' + ico(curTheme === 'light' ? 'sun' : curTheme === 'dark' ? 'moon' : 'auto') + '<span class="thlbl">' + THEMES[curTheme] + '</span></button>' +
     '<span class="status" id="status">' + esc(lastStatus) + '</span><button class="btn pri" data-act="go" data-v="exports">' + ico('download') + 'Exporter</button>';
   document.getElementById('side').innerHTML = side;
   document.getElementById('top').innerHTML = top;
@@ -1961,6 +1970,7 @@ var ACT = {
   projEx: function () { var p = SAMPLE.example(); store.projects.push(p); store.current = p.id; dirty(); render(); toast('Exemple fictif ajouté.'); },
   projDel: function () { if (store.projects.length < 2) return toast('Gardez au moins un projet.'); ask('Supprimer définitivement le projet « ' + proj().name + ' » ?', { ok: 'Supprimer' }, function () { store.projects = store.projects.filter(function (x) { return x.id !== store.current; }); store.current = store.projects[0].id; dirty(); render(); }); },
   logoDel: function () { ST().logo = null; dirty(); render(); },
+  theme: function () { var o = ['light', 'dark', 'auto'], t = o[(o.indexOf(curTheme) + 1) % 3]; applyTheme(t); try { localStorage.setItem(THEME_KEY, t); } catch (e) {} render(); toast('Thème : ' + THEMES[t] + (t === 'auto' ? ' (suit le réglage de l’appareil)' : '')); },
   pdf: function () { exportPdf(); },
   xlsx: function () { exportXlsx(); },
   jsonOut: function () { download(new Blob([JSON.stringify(store, null, 1)], { type: 'application/json' }), 'business-plans-sauvegarde-' + today() + '.json'); }
