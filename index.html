@@ -48,6 +48,17 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .nav .home{margin-bottom:4px}
 .nav h4{display:flex;align-items:center;gap:8px;margin:18px 8px 6px;font-size:12px;font-weight:700;color:var(--ink2)}
 .nav h4 span{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-size:11px}
+.nav .ngrp{margin-top:10px}
+.nav button.ghd{gap:9px;padding:8px 10px;font-size:12px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.06em}
+.nav button.ghd:hover{background:var(--surface2)}
+.nav .ghd .num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-size:11px;letter-spacing:0;flex:none}
+.nav .ghd .lbl{flex:1}
+.nav .ghd .chev{width:15px;height:15px;color:var(--muted);transition:transform .15s}
+.nav .ghd[aria-expanded="false"] .chev{transform:rotate(-90deg)}
+.nav .nsub{margin:2px 0 4px 19px;padding-left:8px;border-left:1px solid var(--line)}
+.nav .nsl{font-size:11px;font-weight:600;color:var(--muted);margin:8px 10px 3px;letter-spacing:.02em}
+.nav .nsub button{padding:6px 10px}
+@media (prefers-reduced-motion:reduce){.nav .ghd .chev{transition:none}}
 .nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;color:var(--ink2);padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13.5px;font-weight:500}
 .nav button:hover{background:var(--surface2);color:var(--ink)}
 .nav button.on{background:var(--brand-soft);color:var(--brand);font-weight:700}
@@ -1824,15 +1835,28 @@ var ICO = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
   auto: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
+  chev: '<path d="M6 9l6 6 6-6"/>',
   dots: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>'
 };
 function ico(k) { return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + (ICO[k] || '') + '</svg>'; }
 var NAV = [
-  ['Saisir', [['hyp', 'Hypothèses clés', 'sliders'], ['activites', 'Ventes', 'cart'], ['charges', 'Charges', 'receipt'], ['personnel', 'Équipe', 'users'], ['invest', 'Investissements', 'box'], ['financement', 'Financement', 'bank'], ['params', 'Réglages', 'gear']]],
-  ['Analyser', [['resultat', 'Compte de résultat', 'chart'], ['tresorerie', 'Trésorerie', 'wallet'], ['financement-plan', 'Plans de financement', 'split'], ['bilan', 'Bilans', 'scale'], ['emprunts', 'Emprunts et amortissements', 'calendar'], ['scenarios', 'Scénarios', 'layers'], ['sensibilite', 'Sensibilité', 'pulse'], ['alertes', 'Contrôles', 'check']]],
-  ['Présenter', [['bp', 'Rédaction du business plan', 'pen'], ['apercu', 'Aperçu du dossier', 'eye'], ['exports', 'Exports', 'download'], ['perso', 'Identité du dossier', 'brush']]]
+  ['Saisir', [
+    ['Activité', [['hyp', 'Hypothèses clés', 'sliders'], ['activites', 'Ventes', 'cart']]],
+    ['Coûts', [['charges', 'Charges', 'receipt'], ['personnel', 'Équipe', 'users']]],
+    ['Investissements et financement', [['invest', 'Investissements', 'box'], ['financement', 'Financement', 'bank']]],
+    ['Paramètres', [['params', 'Réglages', 'gear']]]]],
+  ['Analyser', [
+    ['États financiers', [['resultat', 'Compte de résultat', 'chart'], ['bilan', 'Bilans', 'scale'], ['financement-plan', 'Plans de financement', 'split'], ['tresorerie', 'Trésorerie', 'wallet']]],
+    ['Annexes', [['emprunts', 'Emprunts et amortissements', 'calendar']]],
+    ['Simulations', [['scenarios', 'Scénarios', 'layers'], ['sensibilite', 'Sensibilité', 'pulse']]],
+    ['Contrôle', [['alertes', 'Contrôles', 'check']]]]],
+  ['Présenter', [
+    ['Rédaction', [['bp', 'Rédaction du business plan', 'pen'], ['perso', 'Identité du dossier', 'brush']]],
+    ['Diffusion', [['apercu', 'Aperçu du dossier', 'eye'], ['exports', 'Exports', 'download']]]]]
 ];
-function viewInfo(v) { if (v === 'dashboard') return ['', 'Tableau de bord']; for (var i = 0; i < NAV.length; i++) for (var j = 0; j < NAV[i][1].length; j++) if (NAV[i][1][j][0] === v) return [NAV[i][0], NAV[i][1][j][1]]; return ['', '']; }
+var NAVC = {}; try { NAVC = JSON.parse(localStorage.getItem('bp-nav') || '{}') || {}; } catch (e) { NAVC = {}; }
+function navItems() { var o = []; NAV.forEach(function (g) { g[1].forEach(function (sg) { sg[1].forEach(function (v) { o.push({ g: g[0], sg: sg[0], v: v }); }); }); }); return o; }
+function viewInfo(v) { if (v === 'dashboard') return ['', 'Tableau de bord']; var x = navItems().filter(function (i) { return i.v[0] === v; })[0]; return x ? [x.g + ' / ' + x.sg, x.v[1]] : ['', '']; }
 function shell() {
   var p = proj(), st = ST(), al = allAlerts().filter(function (a) { return a.lvl !== 'info'; }).length;
   document.documentElement.style.setProperty('--brand', st.color || '#2B3A67');
@@ -1842,11 +1866,15 @@ function shell() {
     '<div class="projbox"><select id="projSel" aria-label="Projet">' + store.projects.map(function (x) { return '<option value="' + x.id + '"' + (x.id === p.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('') + '</select>' +
     '<details class="menu"><summary aria-label="Actions sur les projets">' + ico('dots') + '</summary><div class="drop"><button data-act="projNew">Nouveau projet</button><button data-act="projDup">Dupliquer ce projet</button><button data-act="projEx">Ajouter l’exemple fictif</button><button class="danger" data-act="projDel">Supprimer ce projet</button></div></details></div>' +
     '<nav class="nav"><div class="home">' + item(['dashboard', 'Tableau de bord', 'home']) + '</div>' +
-    NAV.map(function (g, i) { return '<h4><span>' + (i + 1) + '</span>' + g[0] + '</h4>' + g[1].map(item).join(''); }).join('') + '</nav>';
+    NAV.map(function (g, i) {
+      var here = g[1].some(function (sg) { return sg[1].some(function (v) { return v[0] === UI.view; }); }), open = here || !NAVC[g[0]];
+      return '<div class="ngrp"><button type="button" class="ghd" data-act="navTog" data-v="' + g[0] + '" aria-expanded="' + open + '"><span class="num">' + (i + 1) + '</span><span class="lbl">' + g[0] + '</span>' + ico('chev').replace('class="i"', 'class="i chev"') + '</button>' +
+        (open ? g[1].map(function (sg) { return '<div class="nsub"><div class="nsl">' + sg[0] + '</div>' + sg[1].map(item).join('') + '</div>'; }).join('') : '') + '</div>';
+    }).join('') + '</nav>';
   var vi = viewInfo(UI.view);
   var top = '<div class="crumb">' + (vi[0] ? vi[0] + ' / ' : '') + '<b>' + vi[1] + '</b></div><span class="grow"></span>' +
     '<span class="small muted">Scénario</span><div class="seg" role="group" aria-label="Scénario actif">' + p.scenarios.map(function (s) { return '<button data-act="scen" data-v="' + s.id + '" class="' + (s.id === p.active ? 'on' : '') + '">' + esc(s.name) + '</button>'; }).join('') + '</div>' +
-    '<select class="mobnav" data-act-change="go" aria-label="Navigation"><option value="dashboard"' + (UI.view === 'dashboard' ? ' selected' : '') + '>Tableau de bord</option>' + NAV.map(function (g) { return '<optgroup label="' + g[0] + '">' + g[1].map(function (v) { return '<option value="' + v[0] + '"' + (UI.view === v[0] ? ' selected' : '') + '>' + v[1] + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>' +
+    '<select class="mobnav" data-act-change="go" aria-label="Navigation"><option value="dashboard"' + (UI.view === 'dashboard' ? ' selected' : '') + '>Tableau de bord</option>' + NAV.map(function (g) { return g[1].map(function (sg) { return '<optgroup label="' + g[0] + ' · ' + sg[0] + '">' + sg[1].map(function (v) { return '<option value="' + v[0] + '"' + (UI.view === v[0] ? ' selected' : '') + '>' + v[1] + '</option>'; }).join('') + '</optgroup>'; }).join('');}).join('') + '</select>' +
     '<button class="btn ghost" data-act="theme" title="Changer le thème (clair, sombre, automatique)" aria-label="Thème : ' + THEMES[curTheme] + '">' + ico(curTheme === 'light' ? 'sun' : curTheme === 'dark' ? 'moon' : 'auto') + '<span class="thlbl">' + THEMES[curTheme] + '</span></button>' +
     '<span class="status" id="status">' + esc(lastStatus) + '</span><button class="btn pri" data-act="go" data-v="exports">' + ico('download') + 'Exporter</button>';
   document.getElementById('side').innerHTML = side;
@@ -1971,6 +1999,7 @@ var ACT = {
   projDel: function () { if (store.projects.length < 2) return toast('Gardez au moins un projet.'); ask('Supprimer définitivement le projet « ' + proj().name + ' » ?', { ok: 'Supprimer' }, function () { store.projects = store.projects.filter(function (x) { return x.id !== store.current; }); store.current = store.projects[0].id; dirty(); render(); }); },
   logoDel: function () { ST().logo = null; dirty(); render(); },
   theme: function () { var o = ['light', 'dark', 'auto'], t = o[(o.indexOf(curTheme) + 1) % 3]; applyTheme(t); try { localStorage.setItem(THEME_KEY, t); } catch (e) {} render(); toast('Thème : ' + THEMES[t] + (t === 'auto' ? ' (suit le réglage de l’appareil)' : '')); },
+  navTog: function (a) { var k = a.getAttribute('data-v'); NAVC[k] = a.getAttribute('aria-expanded') === 'true'; try { localStorage.setItem('bp-nav', JSON.stringify(NAVC)); } catch (e) {} render(); },
   pdf: function () { exportPdf(); },
   xlsx: function () { exportXlsx(); },
   jsonOut: function () { download(new Blob([JSON.stringify(store, null, 1)], { type: 'application/json' }), 'business-plans-sauvegarde-' + today() + '.json'); }
