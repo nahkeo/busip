@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BusiP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>:root{
-  --bg:#F4F5F7;--surface:#FFFFFF;--surface2:#F8F9FB;--ink:#1B2232;--ink2:#3A4357;--muted:#6B7385;--line:#E3E6EC;--line2:#EEF0F4;
+  --bg:#F4F5F7;--surface:#FFFFFF;--surface2:#F8F9FB;--ink:#1B2232;--ink2:#2A3244;--muted:#4C5466;--line:#E3E6EC;--line2:#EEF0F4;
   --brand:#2B3A67;--brand-soft:#EBEEF6;--brand-ink:#FFFFFF;
   --manual:#A86A12;--manual-bg:#FDF4E3;--calc:#2F63A8;--calc-bg:#EFF4FB;
   --neg:#C0392B;--pos:#2F7D57;--warn:#9A5B00;--warn-bg:#FFF5E1;--err-bg:#FDECEA;--info-bg:#F0F3F8;--ok-bg:#EAF6EF;
@@ -18,13 +18,13 @@
   font-family:"Manrope","Segoe UI",-apple-system,Roboto,Arial,sans-serif;color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#12151C;--surface:#191D26;--surface2:#1E232E;--ink:#E7EAF0;--ink2:#C3C8D3;--muted:#8D95A6;--line:#2B313D;--line2:#232833;
+  --bg:#12151C;--surface:#191D26;--surface2:#1E232E;--ink:#E7EAF0;--ink2:#D5D9E2;--muted:#AAB1BF;--line:#2B313D;--line2:#232833;
   --brand-soft:#232A3D;--manual:#E3A84C;--manual-bg:#2E2414;--calc:#8DB4E8;--calc-bg:#1A2434;--neg:#F08A7E;--pos:#7ACB9E;--warn:#E9B451;--warn-bg:#2D2410;--err-bg:#33191A;--info-bg:#1C2230;--ok-bg:#16291F;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#12151C;--surface:#191D26;--surface2:#1E232E;--ink:#E7EAF0;--ink2:#C3C8D3;--muted:#8D95A6;--line:#2B313D;--line2:#232833;
+:root[data-theme="dark"]{--bg:#12151C;--surface:#191D26;--surface2:#1E232E;--ink:#E7EAF0;--ink2:#D5D9E2;--muted:#AAB1BF;--line:#2B313D;--line2:#232833;
   --brand-soft:#232A3D;--manual:#E3A84C;--manual-bg:#2E2414;--calc:#8DB4E8;--calc-bg:#1A2434;--neg:#F08A7E;--pos:#7ACB9E;--warn:#E9B451;--warn-bg:#2D2410;--err-bg:#33191A;--info-bg:#1C2230;--ok-bg:#16291F;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.55;font-feature-settings:"tnum" 1,"lnum" 1;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--ink);font-size:16px;font-weight:500;line-height:1.55;font-feature-settings:"tnum" 1,"lnum" 1;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
@@ -56,7 +56,7 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .nav .ghd .chev{width:15px;height:15px;color:var(--muted);transition:transform .15s}
 .nav .ghd[aria-expanded="false"] .chev{transform:rotate(-90deg)}
 .nav .nsub{margin:2px 0 4px 19px;padding-left:8px;border-left:1px solid var(--line)}
-.nav .nsl{font-size:12.5px;font-weight:600;color:var(--muted);margin:8px 10px 3px;letter-spacing:.02em}
+.nav .nsl{font-size:13px;font-weight:600;color:var(--muted);margin:8px 10px 3px;letter-spacing:.02em}
 .nav .nsub button{padding:6px 10px}
 @media (prefers-reduced-motion:reduce){.nav .ghd .chev{transition:none}}
 .nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;color:var(--ink2);padding:7px 10px;border-radius:7px;cursor:pointer;font-size:15.5px;font-weight:500}
@@ -66,25 +66,25 @@ svg.i{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .nav .cnt{font-size:12.5px;font-weight:700;background:var(--err-bg);color:var(--neg);border-radius:10px;padding:0 7px}
 .main{min-width:0;display:flex;flex-direction:column}
 .top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 32px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
-.crumb{font-size:15px;color:var(--muted)}
+.crumb{font-size:15.5px;color:var(--ink2)}
 .crumb b{color:var(--ink);font-weight:700}
 .top .grow{flex:1}
 .seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:3px;gap:2px}
 .seg button{border:0;background:none;padding:5px 12px;cursor:pointer;border-radius:6px;font-size:15px;font-weight:600;color:var(--muted)}
 .seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(20,25,40,.14)}
-.status{font-size:13.5px;color:var(--muted);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{font-size:14px;color:var(--muted);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .content{padding:30px 32px 80px;max-width:1440px;width:100%}
 
 h1{font-size:29.5px;line-height:1.2;margin:0 0 6px;font-weight:700;letter-spacing:-.02em}
 h2{font-size:19.5px;margin:34px 0 12px;font-weight:700;letter-spacing:-.01em}
 h3{font-size:16.5px;margin:20px 0 10px;font-weight:700}
-.lead{color:var(--muted);margin:0 0 24px;max-width:72ch;font-size:16.5px}
-.muted{color:var(--muted)}.small{font-size:14px}
+.lead{color:var(--ink2);margin:0 0 24px;max-width:72ch;font-size:16.5px}
+.muted{color:var(--muted)}.small{font-size:14.5px}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:18px}
 .row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:130px}
-.fld>span{font-size:14px;color:var(--muted);font-weight:500}
+.fld>span{font-size:14.5px;color:var(--ink2);font-weight:600}
 input[type=text],input[type=date],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 9px;min-width:0}
 textarea{width:100%;min-height:88px;resize:vertical;line-height:1.6}
 input:focus,select:focus,textarea:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
@@ -102,7 +102,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible,summary:focus-visib
 table{border-collapse:collapse;width:100%}
 th,td{padding:8px 12px;border-bottom:1px solid var(--line2);text-align:right;white-space:nowrap;vertical-align:middle}
 tr:last-child td{border-bottom:0}
-th{font-weight:600;font-size:13.5px;color:var(--muted);background:var(--surface);position:sticky;top:0;border-bottom:1px solid var(--line)}
+th{font-weight:700;font-size:14px;color:var(--ink2);background:var(--surface);position:sticky;top:0;border-bottom:1px solid var(--line)}
 td:first-child,th:first-child{text-align:left}
 td.l,th.l{text-align:left}
 tr.tot td{font-weight:700;border-top:1px solid var(--line);background:var(--surface2)}
@@ -119,7 +119,7 @@ td.neg,span.neg,b.neg{color:var(--neg)}
 .src-calc{color:var(--calc);background:var(--calc-bg)}
 .src-manuel{color:var(--manual);background:var(--manual-bg);font-weight:700;box-shadow:inset 0 -2px 0 var(--manual)}
 .cell.inh{color:var(--muted)}
-.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;color:var(--muted);margin:0 0 12px;align-items:center}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:14.5px;color:var(--muted);margin:0 0 12px;align-items:center}
 .legend i{display:inline-block;width:22px;height:14px;vertical-align:-3px;margin-right:6px;border-radius:3px}
 .lg-s{background:var(--surface2);border:1px solid var(--line)}.lg-c{background:var(--calc-bg)}.lg-m{background:var(--manual-bg);box-shadow:inset 0 -2px 0 var(--manual)}
 .notes td{white-space:normal;text-align:left;font-size:14px;color:var(--warn);padding-top:0}
@@ -131,17 +131,17 @@ td.neg,span.neg,b.neg{color:var(--neg)}
 .bulk .sep{width:1px;height:22px;background:var(--line)}
 
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.kpi{padding:16px 18px;border-right:1px solid var(--line2)}
+.kpi{padding:18px 20px;border-right:1px solid var(--line2)}
 .kpi:last-child{border-right:0}
-.kpi span{font-size:14px;color:var(--muted);font-weight:500}
-.kpi b{display:block;font-size:25px;font-weight:700;margin:4px 0 2px;letter-spacing:-.01em}
-.kpi small{color:var(--muted);font-size:13.5px}
+.kpi span{font-size:15px;color:var(--ink2);font-weight:700}
+.kpi b{display:block;font-size:28px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
+.kpi small{color:var(--ink2);font-size:14.5px;font-weight:500}
 .path{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px}
 .path button{display:flex;gap:12px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;cursor:pointer;align-items:flex-start}
 .path button:hover{border-color:var(--brand)}
 .path .n{width:26px;height:26px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-weight:700;font-size:15px;flex:none}
-.path b{display:block;font-size:16px}
-.path small{color:var(--muted);font-size:14px}
+.path b{display:block;font-size:17px}
+.path small{color:var(--ink2);font-size:15px}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(400px,100%),1fr));gap:18px}
 .grid2>*{min-width:0}
 .alert{padding:10px 14px;border-radius:var(--r-sm);margin-bottom:8px;display:flex;gap:12px;justify-content:space-between;align-items:center;font-size:15.5px}
@@ -167,7 +167,9 @@ td.neg,span.neg,b.neg{color:var(--neg)}
 .help:hover{border-color:var(--brand);color:var(--brand)}
 .pop{position:fixed;z-index:50;max-width:340px;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:12px 14px;border-radius:var(--r-sm);font-size:15px;line-height:1.55;box-shadow:0 14px 36px rgba(20,25,40,.18)}
 .chart{width:100%;height:auto;display:block}
-.chart text{fill:var(--muted);font-size:14.5px;font-family:inherit}
+.chartseg button{padding:4px 11px;font-size:14px}
+.chartnote{margin:0 0 8px}
+.chart text{fill:var(--ink2);font-size:14.5px;font-weight:600;font-family:inherit}
 .season{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
 .season label{font-size:13px;color:var(--muted);text-align:center}
 .season input{width:100%;text-align:center}
@@ -832,7 +834,7 @@ function barChart(series, labels) {
   h += '<line x1="' + pl + '" x2="' + W + '" y1="' + sy(0) + '" y2="' + sy(0) + '" stroke="var(--muted)"/>';
   labels.forEach(function (lb, i) {
     series.forEach(function (s, j) { var v = s.v[i], x = pl + i * gw + (gw - bw * series.length) / 2 + j * bw, y1 = sy(Math.max(v, 0)), y2 = sy(Math.min(v, 0)); h += '<rect x="' + x + '" y="' + y1 + '" width="' + (bw - 3) + '" height="' + Math.max(1, y2 - y1) + '" fill="' + s.c + '"><title>' + esc(s.n) + ' ' + lb + ' : ' + fC(v) + '</title></rect>'; });
-    h += '<text x="' + (pl + i * gw + gw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + lb + '</text>';
+    if (i % Math.max(1, Math.ceil(labels.length / 7)) === 0) h += '<text x="' + (pl + i * gw + gw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + lb + '</text>';
   });
   var lx = pl; series.forEach(function (s) { h += '<rect x="' + lx + '" y="' + (H + 8) + '" width="10" height="10" fill="' + s.c + '"/><text x="' + (lx + 14) + '" y="' + (H + 19) + '">' + esc(s.n) + '</text>'; lx += 28 + s.n.length * 8.5; });
   return h + '</svg>';
@@ -841,7 +843,7 @@ function lineChart(series, labels, mark) {
   var W = 560, H = 230, pl = 64, pb = 28, pt = 12, all = [];
   series.forEach(function (s) { all = all.concat(s.v); });
   var mx = Math.max.apply(null, all.concat([0])), mn = Math.min.apply(null, all.concat([0])); if (mx === mn) mx = mn + 1;
-  var n = labels.length, sx = function (i) { return pl + i * (W - pl - 10) / Math.max(1, n - 1); }, sy = function (v) { return pt + (mx - v) / (mx - mn) * (H - pt - pb); };
+  var n = labels.length, sx = function (i) { return pl + 26 + i * (W - pl - 62) / Math.max(1, n - 1); }, sy = function (v) { return pt + (mx - v) / (mx - mn) * (H - pt - pb); };
   var h = '<svg class="chart" viewBox="0 0 ' + W + ' ' + (H + 28) + '" role="img">';
   if (mn < 0) h += '<rect x="' + pl + '" y="' + sy(0) + '" width="' + (W - pl - 10) + '" height="' + (sy(mn) - sy(0)) + '" fill="var(--err-bg)"/>';
   for (var t = 0; t <= 4; t++) { var v = mn + (mx - mn) * t / 4, yy = sy(v); h += '<line x1="' + pl + '" x2="' + W + '" y1="' + yy + '" y2="' + yy + '" stroke="var(--line2)"/><text x="' + (pl - 6) + '" y="' + (yy + 4) + '" text-anchor="end">' + fN(v / 1000, 0) + ' k</text>'; }
@@ -856,6 +858,27 @@ function lineChart(series, labels, mark) {
   return h + '</svg>';
 }
 var COL = { a: 'var(--brand)', b: 'var(--calc)', c: 'var(--manual)', d: 'var(--neg)' };
+var PIE = ['var(--brand)', 'var(--calc)', 'var(--manual)', 'var(--pos)', '#8A63B8', '#2A9D9A', '#C2607A', '#7D8597', '#B8892E', '#4F7CC9'];
+function pieChart(sl) {
+  sl = sl.filter(function (s) { return s.v > 0.5; });
+  var tot = sl.reduce(function (a, s) { return a + s.v; }, 0);
+  if (!tot) return '<p class="muted">Aucun montant positif à représenter.</p>';
+  var W = 560, H = Math.max(250, 34 + sl.length * 30), cx = 125, cy = H / 2, R = 112, a0 = -Math.PI / 2;
+  var h = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img">';
+  sl.forEach(function (s, i) {
+    var f = s.v / tot, a1 = a0 + f * 2 * Math.PI, col = PIE[i % PIE.length], tip = '<title>' + esc(s.n) + ' : ' + fC(s.v) + ' (' + fP(f * 100) + ')</title>';
+    if (f > 0.9999) h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="' + col + '">' + tip + '</circle>';
+    else h += '<path d="M' + cx + ',' + cy + ' L' + (cx + R * Math.cos(a0)) + ',' + (cy + R * Math.sin(a0)) + ' A' + R + ',' + R + ' 0 ' + (f > 0.5 ? 1 : 0) + ' 1 ' + (cx + R * Math.cos(a1)) + ',' + (cy + R * Math.sin(a1)) + ' Z" fill="' + col + '" stroke="var(--surface)" stroke-width="2">' + tip + '</path>';
+    var am = (a0 + a1) / 2;
+    if (f >= 0.07) h += '<text x="' + (cx + R * 0.62 * Math.cos(am)) + '" y="' + (cy + R * 0.62 * Math.sin(am) + 5) + '" text-anchor="middle" style="fill:#fff;font-weight:700">' + fN(f * 100, 0) + ' %</text>';
+    var ly = 30 + i * 30, nm = s.n.length > 22 ? s.n.slice(0, 21) + '…' : s.n;
+    h += '<rect x="262" y="' + (ly - 12) + '" width="14" height="14" rx="3" fill="' + col + '"/><text x="284" y="' + ly + '">' + esc(nm) + '</text><text x="' + (W - 4) + '" y="' + ly + '" text-anchor="end">' + fC(s.v) + '</text>';
+    a0 = a1;
+  });
+  return h + '</svg>';
+}
+function chartSeg(k, cur) { return '<div class="seg chartseg" role="group" aria-label="Type de graphique">' + [['line', 'Courbes'], ['bar', 'Bâtons'], ['pie', 'Camembert']].map(function (o) { return '<button type="button" data-act="chartType" data-k="' + k + '" data-v="' + o[0] + '" class="' + (cur === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+function yearSeg(py) { return '<div class="seg chartseg" role="group" aria-label="Exercice du camembert">' + ['N', 'N+1', 'N+2'].map(function (l, i) { return '<button type="button" data-act="pieYear" data-v="' + i + '" class="' + (py === i ? 'on' : '') + '">' + l + '</button>'; }).join('') + '</div>'; }
 
 /* ===== Vues ===== */
 var Y3 = ['N', 'N+1', 'N+2'];
@@ -934,9 +957,15 @@ V.dashboard = function () {
     '<button data-act="go" data-v="alertes"><span class="n">2</span><span><b>Contrôler</b><small>' + (nErr ? nErr + ' point(s) bloquant(s)' : 'Aucun point bloquant') + '</small></span></button>' +
     '<button data-act="go" data-v="exports"><span class="n">3</span><span><b>Présenter</b><small>PDF, Excel, aperçu du dossier</small></span></button></div>';
   h += '<div class="kpis">' + k('Chiffre d’affaires N', i[0].ca, 'N+2 : ' + fC(i[2].ca)) + k('Marge brute N', i[0].mb, fP(i[0].tmb * 100) + ' du CA', 'mb') + k('EBE N', i[0].ebe, 'N+2 : ' + fC(i[2].ebe), 'ebe') + k('Résultat net N', i[0].rn, 'N+2 : ' + fC(i[2].rn)) + k('Trésorerie fin N+2', i[2].tEnd, 'Point bas : ' + fC(r.tMin) + ' (' + r.monthLabel(r.tMinM) + ')') + k('Besoin de financement', r.need, r.need > 0 ? 'à couvrir' : 'aucun mois négatif') + '</div>';
-  h += '<div class="grid2"><div class="panel"><h3 style="margin-top:0">Activité et rentabilité</h3>' + barChart([{ n: 'CA', v: r.pl.ca, c: COL.a }, { n: 'EBE', v: r.pl.ebe, c: COL.b }, { n: 'Résultat net', v: r.pl.rn, c: COL.c }], Y3) + '</div>';
+  var cA = UI.chartA || 'bar', cT = UI.chartT || 'line', py = UI.pieYear == null ? 2 : UI.pieYear;
+  var sA = [{ n: 'CA', v: r.pl.ca, c: COL.a }, { n: 'EBE', v: r.pl.ebe, c: COL.b }, { n: 'Résultat net', v: r.pl.rn, c: COL.c }];
+  var gA = cA === 'pie' ? '<p class="small muted chartnote">Répartition du chiffre d’affaires par activité, exercice ' + Y3[py] + '</p>' + pieChart(r.acts.map(function (a) { return { n: a.name, v: a.caY[py] }; })) : (cA === 'line' ? lineChart(sA, Y3) : barChart(sA, Y3));
+  h += '<div class="grid2"><div class="panel"><div class="card-h"><h3 style="margin:0">' + (cA === 'pie' ? 'Chiffre d’affaires par activité' : 'Activité et rentabilité') + '</h3><div class="row" style="gap:8px">' + (cA === 'pie' ? yearSeg(py) : '') + chartSeg('A', cA) + '</div></div>' + gA + '</div>';
   var lb = []; for (var m = 0; m < r.M; m++) lb.push(r.monthLabel(m));
-  h += '<div class="panel"><h3 style="margin-top:0">Trésorerie de fin de mois</h3>' + lineChart([{ n: 'Trésorerie', v: r.cash.T, c: COL.a }], lb, [r.F - 1, r.F + 11]) + '</div></div>';
+  var decL = [['fournisseurs', 'Fournisseurs'], ['autres', 'Impôts, taxes et autres'], ['salaires', 'Salaires'], ['sociales', 'Charges sociales'], ['invest', 'Investissements'], ['exc', 'Dépenses exceptionnelles'], ['interets', 'Intérêts d’emprunts'], ['capital', 'Remboursement d’emprunts'], ['tva', 'TVA reversée'], ['is', 'Impôt sur les sociétés']];
+  var sT = [{ n: 'Trésorerie', v: r.cash.T, c: COL.a }];
+  var gT = cT === 'pie' ? '<p class="small muted chartnote">Répartition des décaissements, exercice ' + Y3[py] + '</p>' + pieChart(decL.map(function (d) { var s = 0; for (var mm = r.yStart[py]; mm <= r.yEnd[py]; mm++) s += r.cash.dec[d[0]][mm]; return { n: d[1], v: s }; })) : (cT === 'bar' ? barChart(sT, lb) : lineChart(sT, lb, [r.F - 1, r.F + 11]));
+  h += '<div class="panel"><div class="card-h"><h3 style="margin:0">' + (cT === 'pie' ? 'Décaissements par nature' : 'Trésorerie de fin de mois') + '</h3><div class="row" style="gap:8px">' + (cT === 'pie' ? yearSeg(py) : '') + chartSeg('T', cT) + '</div></div>' + gT + '</div></div>';
   h += '<div class="grid2"><div class="panel"><h3 style="margin-top:0">Indicateurs clés</h3><div class="tw"><table>' + yHead() +
     yRow('Valeur ajoutée', i.map(function (x) { return x.va; }), '', 'va') + yRow('CAF', i.map(function (x) { return x.caf; }), '', 'caf') +
     yRow('Seuil de rentabilité', i.map(function (x) { return x.sr; }), '', 'sr') + yRow('BFR', i.map(function (x) { return x.bfr; }), '', 'bfr') +
@@ -2000,6 +2029,8 @@ var ACT = {
   logoDel: function () { ST().logo = null; dirty(); render(); },
   theme: function () { var o = ['light', 'dark', 'auto'], t = o[(o.indexOf(curTheme) + 1) % 3]; applyTheme(t); try { localStorage.setItem(THEME_KEY, t); } catch (e) {} render(); toast('Thème : ' + THEMES[t] + (t === 'auto' ? ' (suit le réglage de l’appareil)' : '')); },
   navTog: function (a) { var k = a.getAttribute('data-v'); NAVC[k] = a.getAttribute('aria-expanded') === 'true'; try { localStorage.setItem('bp-nav', JSON.stringify(NAVC)); } catch (e) {} render(); },
+  chartType: function (a) { UI['chart' + a.getAttribute('data-k')] = a.getAttribute('data-v'); render(); },
+  pieYear: function (a) { UI.pieYear = +a.getAttribute('data-v'); render(); },
   pdf: function () { exportPdf(); },
   xlsx: function () { exportXlsx(); },
   jsonOut: function () { download(new Blob([JSON.stringify(store, null, 1)], { type: 'application/json' }), 'business-plans-sauvegarde-' + today() + '.json'); }
